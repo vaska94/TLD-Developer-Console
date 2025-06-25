@@ -1,6 +1,8 @@
 # Developer-Console
 
 A mod for The Long Dark that makes Hinterland's developer console accessible in-game.
+Forked From: https://github.com/FINDarkside/TLD-Developer-Console
+Fixed / Tested on 2.44
 
 ## Instructions
 
