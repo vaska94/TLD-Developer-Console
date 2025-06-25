@@ -10,7 +10,13 @@ namespace DeveloperConsole {
 
 		private static string GetFilePath() => Path.GetFullPath(Path.Combine(MelonEnvironment.ModsDirectory, FILE_NAME));
 
-		internal static void CreateLogFile() => File.Create(GetFilePath());
+		internal static void CreateLogFile() {
+			try {
+				using (File.Create(GetFilePath())) { }
+			} catch {
+				// Ignore file creation errors
+			}
+		}
 
 		private static void Log(string text) {
 			if (text is null) return;
@@ -19,14 +25,22 @@ namespace DeveloperConsole {
 				return;
 			} else {
 				MaybeLogNullReference();
-				File.AppendAllLines(GetFilePath(), new string[] { text });
+				TryWriteToFile(new string[] { text });
 			}
 		}
 
 		internal static void MaybeLogNullReference() {
 			if (numNullReference > 0) {
-				File.AppendAllLines(GetFilePath(), new string[] { "(" + numNullReference + ") " + NULL_REFERENCE_TEXT });
+				TryWriteToFile(new string[] { "(" + numNullReference + ") " + NULL_REFERENCE_TEXT });
 				numNullReference = 0;
+			}
+		}
+
+		private static void TryWriteToFile(string[] lines) {
+			try {
+				File.AppendAllLines(GetFilePath(), lines);
+			} catch {
+				// Silently ignore file access errors to prevent spam
 			}
 		}
 
