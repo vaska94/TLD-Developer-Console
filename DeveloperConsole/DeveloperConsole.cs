@@ -1,4 +1,4 @@
-﻿using Il2Cpp;
+using Il2Cpp;
 using Il2CppTLD.AddressableAssets;
 using Il2CppTLD.Scenes;
 using MelonLoader;
@@ -14,7 +14,11 @@ namespace DeveloperConsole {
         public override void OnInitializeMelon() {
             FileLog.CreateLogFile();
             AddConsoleCommands();
-            Debug.Log($"[{Info.Name}] version {Info.Version} loaded!");
+            MelonLogger.Msg($"version {Info.Version} loaded, the console is created once the first scene has loaded.");
+        }
+
+        public override void OnSceneWasInitialized(int buildIndex, string sceneName) {
+            ConsoleBootstrap.OnSceneInitialized();
         }
 
         public override void OnApplicationQuit() {

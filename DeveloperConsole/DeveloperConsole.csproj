@@ -1,30 +1,66 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-	<!--This is an xml comment. Comments have no impact on compiling.-->
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--This is the .NET version the mod will be compiled with. Don't change it.-->
+		<!-- MelonLoader 0.7.x runs Il2Cpp mods on .NET 6; keep this even when building with a newer SDK. -->
 		<TargetFramework>net6.0</TargetFramework>
-
-		<!--This tells the compiler to use the latest C# version.-->
 		<LangVersion>Latest</LangVersion>
-
-		<!--This adds global usings for a few common System namespaces.-->
 		<ImplicitUsings>enable</ImplicitUsings>
-
-		<!--This enables nullable annotation and analysis. It's good coding form.-->
-		<Nullable>enable</Nullable>
-
-		<!--This tells the compiler to use assembly attributes instead of generating its own.-->
+		<!-- Nullable annotations stay off: the Unity 6 interop CoreModule can publicly define NullableAttribute, which clashes with the compiler-generated one (CS0656). -->
+		<Nullable>disable</Nullable>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-
-		<!--PDB files are mostly useless for modding since they can't be loaded.-->
 		<DebugType>none</DebugType>
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 	</PropertyGroup>
 
-	<!--This is the of packages that the mod references.-->
-	<ItemGroup>
-		<!--This package contains almost everything a person could possibly need to reference while modding.-->
-		<PackageReference Include="ds5678.Modding.TLD.Il2CppAssemblies.Windows" Version="2.10.0" />
-		<!--If the mod references any other mods (such as ModSettings), their NuGet package will also need to be listed here.-->
+	<!--
+	  Game assemblies come from one of two places:
+
+	  1. Default: the NuGet package of Il2Cpp interop assemblies for the matching game version.
+	     Works anywhere (CI, fresh clone) with no game install.
+
+	  2. Your installed game: set the TLD_GAME_DIR environment variable (or pass -p:TLDGameDir=...)
+	     to The Long Dark's install folder. The mod then compiles against the assemblies MelonLoader
+	     generated in <GameDir>/MelonLoader/Il2CppAssemblies on first launch, so it always matches
+	     exactly the game + MelonLoader version you have installed.
+	-->
+	<PropertyGroup>
+		<TLDGameDir Condition="'$(TLDGameDir)' == '' And '$(TLD_GAME_DIR)' != ''">$(TLD_GAME_DIR)</TLDGameDir>
+		<UseGameAssemblies Condition="'$(UseGameAssemblies)' == '' And '$(TLDGameDir)' != ''">true</UseGameAssemblies>
+		<UseGameAssemblies Condition="'$(UseGameAssemblies)' == ''">false</UseGameAssemblies>
+		<MelonLoaderDir>$(TLDGameDir)/MelonLoader</MelonLoaderDir>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(UseGameAssemblies)' != 'true'">
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+		<!-- NU1605: the pinned (lower) HarmonyX / Il2CppInterop versions below are intentional. NU1603 / NU1701: noise from MelonLoader's own package graph. -->
+		<NoWarn>$(NoWarn);NU1605;NU1603;NU1701</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(UseGameAssemblies)' != 'true'">
+		<PackageReference Include="REDcat.Modding.TLD.Il2CppAssemblies" Version="2.60.0" />
+		<!--
+		  The assembly package asks for newer HarmonyX / Il2CppInterop than MelonLoader 0.7.3 actually ships
+		  (0Harmony 2.10.2, Il2CppInterop 1.5.1). .NET will not bind a reference to a lower assembly version
+		  than the one compiled against, so pin them to what is installed with MelonLoader. Bump these together
+		  with the MelonLoader version.
+		-->
+		<PackageReference Include="HarmonyX" Version="2.10.2" />
+		<PackageReference Include="Il2CppInterop.Runtime" Version="1.5.1" />
+		<PackageReference Include="Il2CppInterop.Common" Version="1.5.1" />
 	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseGameAssemblies)' == 'true'">
+		<Reference Include="$(MelonLoaderDir)/net6/MelonLoader.dll" Private="false" />
+		<Reference Include="$(MelonLoaderDir)/net6/0Harmony.dll" Private="false" />
+		<Reference Include="$(MelonLoaderDir)/net6/Il2CppInterop.Runtime.dll" Private="false" />
+		<Reference Include="$(MelonLoaderDir)/net6/Il2CppInterop.Common.dll" Private="false" />
+		<Reference Include="$(MelonLoaderDir)/Il2CppAssemblies/*.dll" Private="false" />
+	</ItemGroup>
+
+	<Target Name="CheckGameAssemblies" BeforeTargets="BeforeBuild" Condition="'$(UseGameAssemblies)' == 'true'">
+		<Message Importance="high" Text="DeveloperConsole: compiling against game assemblies in '$(MelonLoaderDir)/Il2CppAssemblies'" />
+		<Error Condition="!Exists('$(MelonLoaderDir)/Il2CppAssemblies/Assembly-CSharp.dll')"
+		       Text="Game interop assemblies not found at '$(MelonLoaderDir)/Il2CppAssemblies'. Install MelonLoader into The Long Dark and launch the game once so it generates them, or unset TLD_GAME_DIR to build against the NuGet package instead." />
+	</Target>
+
 </Project>

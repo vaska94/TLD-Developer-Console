@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("b603c36b-de03-4522-8738-74a3c9fcfe88")]
-[assembly: AssemblyVersion("1.5.2.0")]
-[assembly: AssemblyFileVersion("1.5.2.0")]
-[assembly: MelonInfo(typeof(DeveloperConsole.DeveloperConsole), "DeveloperConsole", "1.5.2", "FINDarkside, zeobviouslyfakeacc, ds5678")]
+[assembly: AssemblyVersion("1.6.0.0")]
+[assembly: AssemblyFileVersion("1.6.0.0")]
+[assembly: MelonInfo(typeof(DeveloperConsole.DeveloperConsole), "DeveloperConsole", "1.6.0", "FINDarkside, zeobviouslyfakeacc, ds5678")]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
